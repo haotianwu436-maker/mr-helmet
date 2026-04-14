@@ -7,52 +7,37 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
-      --primary: #534AB7;
-      --primary-light: #6B62CC;
-      --primary-dark: #3C3489;
-      --bg: #0f0f1a;
-      --bg-card: #1a1a2e;
-      --text: #e8e8f0;
-      --text-dim: #8888aa;
-      --text-active: #ffffff;
-      --border: #2a2a40;
-      --success: #2ecc71;
-      --error: #e74c3c;
+      --primary: #534AB7; --primary-light: #6B62CC; --primary-dark: #3C3489;
+      --bg: #0f0f1a; --bg-card: #1a1a2e; --text: #e8e8f0; --text-dim: #8888aa;
+      --text-active: #ffffff; --border: #2a2a40; --success: #2ecc71; --error: #e74c3c;
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      padding: 24px 16px;
+      background: var(--bg); color: var(--text); min-height: 100vh;
+      display: flex; justify-content: center; padding: 24px 16px;
     }
     .container { width: 100%; max-width: 640px; }
     .header { text-align: center; margin-bottom: 24px; }
     .header h1 { font-size: 24px; color: var(--text-active); }
     .header h1 span { color: var(--primary); }
     .header p { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
-    .card {
-      background: var(--bg-card);
-      border-radius: 16px;
-      padding: 24px;
-      border: 1px solid var(--border);
-      margin-bottom: 16px;
-    }
-    .card-title {
-      font-size: 14px; font-weight: 600; color: var(--text-dim);
-      text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px;
-    }
+    .card { background: var(--bg-card); border-radius: 16px; padding: 24px; border: 1px solid var(--border); margin-bottom: 16px; }
+    .card-title { font-size: 14px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
     label { display: block; font-size: 13px; color: var(--text-dim); margin-bottom: 6px; font-weight: 500; }
     textarea {
-      width: 100%; min-height: 200px; background: var(--bg); border: 1px solid var(--border);
+      width: 100%; min-height: 180px; background: var(--bg); border: 1px solid var(--border);
       border-radius: 10px; padding: 14px; color: var(--text); font-size: 14px;
       line-height: 1.6; resize: vertical; font-family: inherit;
     }
     textarea:focus { outline: none; border-color: var(--primary); }
     textarea::placeholder { color: #555570; }
+    input[type="text"], input[type="password"] {
+      width: 100%; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text); font-size: 14px;
+    }
+    input:focus { outline: none; border-color: var(--primary); }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 16px; }
     select {
       width: 100%; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border);
       border-radius: 10px; color: var(--text); font-size: 14px; cursor: pointer; appearance: none;
@@ -60,14 +45,28 @@
       background-repeat: no-repeat; background-position: right 12px center;
     }
     select:focus { outline: none; border-color: var(--primary); }
+
+    /* Engine Toggle */
+    .engine-toggle { display: flex; gap: 8px; margin-bottom: 16px; }
+    .engine-btn {
+      flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 10px;
+      background: var(--bg); color: var(--text-dim); font-size: 13px; cursor: pointer;
+      text-align: center; transition: all 0.2s;
+    }
+    .engine-btn.active { background: var(--primary); border-color: var(--primary); color: white; }
+    .engine-btn small { display: block; font-size: 10px; margin-top: 2px; opacity: 0.7; }
+
+    /* Sections */
+    .edge-options, .elevenlabs-options { margin-top: 12px; }
+    .hidden { display: none !important; }
+
     .generate-btn {
       width: 100%; padding: 14px; background: var(--primary); border: none; border-radius: 12px;
       color: white; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 20px;
       transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;
     }
     .generate-btn:hover { background: var(--primary-light); }
-    .generate-btn:active { transform: scale(0.98); }
-    .generate-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .generate-btn:disabled { opacity: 0.6; cursor: not-allowed; }
     .generate-btn .spinner {
       width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3);
       border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; display: none;
@@ -77,6 +76,7 @@
     .generate-btn.loading .btn-loading { display: inline; }
     .btn-loading { display: none; }
     @keyframes spin { to { transform: rotate(360deg); } }
+
     .result-card { display: none; }
     .result-card.show { display: block; }
     .result-info { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
@@ -87,13 +87,12 @@
     .action-btn {
       padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg);
       color: var(--text); font-size: 14px; font-weight: 500; cursor: pointer; text-align: center;
-      text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px;
-      transition: all 0.15s;
+      text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s;
     }
     .action-btn:hover { border-color: var(--primary); color: var(--primary-light); }
     .action-btn.primary { background: var(--primary); border-color: var(--primary); color: white; }
     .action-btn.primary:hover { background: var(--primary-light); }
-    .player-embed { margin-top: 16px; border-radius: 12px; overflow: hidden; background: var(--bg); padding: 16px; }
+    .player-embed { margin-top: 16px; border-radius: 12px; background: var(--bg); padding: 16px; }
     .player-embed audio { width: 100%; }
     .toast {
       position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px);
@@ -103,6 +102,9 @@
     .toast.show { transform: translateX(-50%) translateY(0); }
     .toast.error { background: var(--error); }
     .char-count { text-align: right; font-size: 12px; color: var(--text-dim); margin-top: 6px; }
+    .api-key-row { margin-top: 12px; }
+    .api-key-row .hint { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+    .api-key-row a { color: var(--primary-light); }
   </style>
 </head>
 <body>
@@ -117,29 +119,71 @@
       <label for="text">输入销售话术（段落间用空行分隔）</label>
       <textarea id="text" placeholder="在这里输入你的销售文案...&#10;&#10;段落之间用空行分隔，每个段落会成为一个字幕段。"></textarea>
       <div class="char-count"><span id="charCount">0</span> 字符</div>
+    </div>
 
-      <div class="form-row">
-        <div>
-          <label for="language">语言</label>
-          <select id="language">
-            <option value="ms-MY" selected>马来语 (Malay)</option>
-            <option value="zh-CN">中文普通话</option>
-            <option value="zh-HK">粤语 (Cantonese)</option>
-            <option value="en-US">英语 (English)</option>
-            <option value="id-ID">印尼语 (Indonesian)</option>
-            <option value="vi-VN">越南语 (Vietnamese)</option>
-            <option value="th-TH">泰语 (Thai)</option>
-            <option value="ja-JP">日语 (Japanese)</option>
-            <option value="ko-KR">韩语 (Korean)</option>
-            <option value="ar-SA">阿拉伯语 (Arabic)</option>
-          </select>
+    <!-- Engine Selection -->
+    <div class="card">
+      <div class="card-title">语音引擎</div>
+      <div class="engine-toggle">
+        <button class="engine-btn active" data-engine="edge" onclick="setEngine('edge')">
+          Edge TTS<small>免费 / 快速预览</small>
+        </button>
+        <button class="engine-btn" data-engine="elevenlabs" onclick="setEngine('elevenlabs')">
+          ElevenLabs<small>高质量 / 像真人</small>
+        </button>
+      </div>
+
+      <!-- Edge TTS Options -->
+      <div class="edge-options" id="edgeOptions">
+        <div class="form-row">
+          <div>
+            <label for="language">语言</label>
+            <select id="language">
+              <option value="ms-MY" selected>马来语 (Malay)</option>
+              <option value="zh-CN">中文普通话</option>
+              <option value="zh-HK">粤语 (Cantonese)</option>
+              <option value="en-US">英语 (English)</option>
+              <option value="id-ID">印尼语 (Indonesian)</option>
+              <option value="vi-VN">越南语 (Vietnamese)</option>
+              <option value="th-TH">泰语 (Thai)</option>
+              <option value="ja-JP">日语 (Japanese)</option>
+              <option value="ko-KR">韩语 (Korean)</option>
+              <option value="ar-SA">阿拉伯语 (Arabic)</option>
+            </select>
+          </div>
+          <div>
+            <label for="gender">音色</label>
+            <select id="gender">
+              <option value="female">女声</option>
+              <option value="male">男声</option>
+            </select>
+          </div>
         </div>
-        <div>
-          <label for="gender">音色</label>
-          <select id="gender">
-            <option value="female">女声</option>
-            <option value="male">男声</option>
-          </select>
+      </div>
+
+      <!-- ElevenLabs Options -->
+      <div class="elevenlabs-options hidden" id="elevenlabsOptions">
+        <div class="api-key-row">
+          <label for="apiKey">API Key</label>
+          <input type="password" id="apiKey" placeholder="sk-..." autocomplete="off">
+          <p class="hint">在 <a href="https://elevenlabs.io" target="_blank">elevenlabs.io</a> 免费注册获取，每月 10000 字符额度</p>
+        </div>
+        <div class="form-row" style="margin-top:12px">
+          <div>
+            <label for="elVoice">音色</label>
+            <select id="elVoice">
+              <option value="21m00Tcm4TlvDq8ikWAM">Rachel - 温柔自然</option>
+              <option value="XrExE9yKIg1WjnnlVkGX">Matilda - 专业沉稳</option>
+              <option value="EXAVITQu4vr4xnSDxMaL">Sarah - 亲切友好</option>
+              <option value="ErXwobaYiN019PkySvjV">Antoni - 专业有力</option>
+              <option value="pNInz6obpgDQGcFmaJgB">Adam - 深沉磁性</option>
+              <option value="pqHfZKP75CvOlQylNhV4">Bill - 自信权威</option>
+            </select>
+          </div>
+          <div>
+            <label>语言</label>
+            <select disabled><option>自动检测 (多语言)</option></select>
+          </div>
         </div>
       </div>
 
@@ -150,25 +194,16 @@
       </button>
     </div>
 
+    <!-- Result -->
     <div class="card result-card" id="resultCard">
       <div class="card-title">生成结果</div>
       <div class="result-info">
-        <div class="result-stat">
-          <div class="value" id="resDuration">-</div>
-          <div class="label">时长</div>
-        </div>
-        <div class="result-stat">
-          <div class="value" id="resSegments">-</div>
-          <div class="label">段落数</div>
-        </div>
-        <div class="result-stat">
-          <div class="value" id="resSize">-</div>
-          <div class="label">文件大小</div>
-        </div>
+        <div class="result-stat"><div class="value" id="resDuration">-</div><div class="label">时长</div></div>
+        <div class="result-stat"><div class="value" id="resSegments">-</div><div class="label">段落数</div></div>
+        <div class="result-stat"><div class="value" id="resSize">-</div><div class="label">文件大小</div></div>
       </div>
-
       <div class="action-row">
-        <button class="action-btn primary" id="downloadBtn" onclick="downloadAudio()">
+        <button class="action-btn primary" onclick="downloadAudio()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           下载 MP3
         </button>
@@ -177,7 +212,6 @@
           在线试听
         </button>
       </div>
-
       <div class="player-embed" id="playerEmbed" style="display:none">
         <audio id="audioPreview" controls style="width:100%"></audio>
       </div>
@@ -187,16 +221,23 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    const textarea = document.getElementById('text');
-    const charCount = document.getElementById('charCount');
-    const generateBtn = document.getElementById('generateBtn');
-    const resultCard = document.getElementById('resultCard');
-
+    let currentEngine = 'edge';
     let audioBlobUrl = null;
 
-    textarea.addEventListener('input', () => {
-      charCount.textContent = textarea.value.length;
+    // Load saved API key
+    const savedKey = localStorage.getItem('elevenlabs_api_key');
+    if (savedKey) document.getElementById('apiKey').value = savedKey;
+
+    document.getElementById('text').addEventListener('input', function() {
+      document.getElementById('charCount').textContent = this.value.length;
     });
+
+    function setEngine(engine) {
+      currentEngine = engine;
+      document.querySelectorAll('.engine-btn').forEach(b => b.classList.toggle('active', b.dataset.engine === engine));
+      document.getElementById('edgeOptions').classList.toggle('hidden', engine !== 'edge');
+      document.getElementById('elevenlabsOptions').classList.toggle('hidden', engine !== 'elevenlabs');
+    }
 
     function showToast(msg, isError) {
       const t = document.getElementById('toast');
@@ -213,55 +254,54 @@
     }
 
     async function generate() {
-      const text = textarea.value.trim();
+      const text = document.getElementById('text').value.trim();
       if (!text) { showToast('请输入文案内容', true); return; }
 
-      const language = document.getElementById('language').value;
-      const gender = document.getElementById('gender').value;
+      const body = { text, engine: currentEngine };
 
-      generateBtn.classList.add('loading');
-      generateBtn.disabled = true;
-      resultCard.classList.remove('show');
+      if (currentEngine === 'edge') {
+        body.language = document.getElementById('language').value;
+        body.gender = document.getElementById('gender').value;
+      } else {
+        body.api_key = document.getElementById('apiKey').value.trim();
+        body.voice_id = document.getElementById('elVoice').value;
+        if (!body.api_key) { showToast('请输入 ElevenLabs API Key', true); return; }
+        localStorage.setItem('elevenlabs_api_key', body.api_key);
+      }
+
+      const btn = document.getElementById('generateBtn');
+      btn.classList.add('loading');
+      btn.disabled = true;
+      document.getElementById('resultCard').classList.remove('show');
 
       try {
         const resp = await fetch('/api/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text, language, gender })
+          body: JSON.stringify(body)
         });
 
         const data = await resp.json();
+        if (!resp.ok) { showToast(data.error || '生成失败', true); return; }
 
-        if (!resp.ok) {
-          showToast(data.error || '生成失败', true);
-          return;
-        }
-
-        // Create blob URL from base64 audio
         if (audioBlobUrl) URL.revokeObjectURL(audioBlobUrl);
         const blob = base64ToBlob(data.audio_base64, 'audio/mpeg');
         audioBlobUrl = URL.createObjectURL(blob);
 
-        // Show result
         document.getElementById('resDuration').textContent = data.duration_fmt;
         document.getElementById('resSegments').textContent = data.segment_count;
         document.getElementById('resSize').textContent = data.file_size_mb + ' MB';
-
-        resultCard.classList.add('show');
-        showToast('生成成功! ' + data.language + ' · ' + data.voice, false);
-
-        // Set audio preview
+        document.getElementById('resultCard').classList.add('show');
         document.getElementById('audioPreview').src = audioBlobUrl;
         document.getElementById('playerEmbed').style.display = 'none';
 
-        // Scroll to result
-        resultCard.scrollIntoView({ behavior: 'smooth' });
-
+        showToast(data.engine + ' · ' + data.voice, false);
+        document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
       } catch (e) {
         showToast('网络错误: ' + e.message, true);
       } finally {
-        generateBtn.classList.remove('loading');
-        generateBtn.disabled = false;
+        btn.classList.remove('loading');
+        btn.disabled = false;
       }
     }
 

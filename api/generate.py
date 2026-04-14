@@ -1,20 +1,19 @@
 """
 Vercel Serverless Function: TTS Audio Generation
+Supports both Edge TTS (free) and ElevenLabs (high quality)
 POST /api/generate
-Returns: { audio_base64, segments, duration, ... }
 """
 
 import asyncio
 import base64
 import json
-import os
-import tempfile
+import urllib.request
+import urllib.error
 
 from http.server import BaseHTTPRequestHandler
 
-
-# Voice mapping
-VOICES = {
+# Edge TTS voices
+EDGE_VOICES = {
     "ms-MY": {"label": "马来语 (Malay)", "female": "ms-MY-YasminNeural", "male": "ms-MY-OsmanNeural"},
     "zh-CN": {"label": "中文普通话", "female": "zh-CN-XiaoxiaoNeural", "male": "zh-CN-YunjianNeural"},
     "zh-HK": {"label": "粤语 (Cantonese)", "female": "zh-HK-HiuGaaiNeural", "male": "zh-HK-WanLungNeural"},
@@ -27,11 +26,22 @@ VOICES = {
     "ar-SA": {"label": "阿拉伯语 (Arabic)", "female": "ar-SA-ZariyahNeural", "male": "ar-SA-HamedNeural"},
 }
 
+# ElevenLabs popular multilingual voices
+ELEVENLABS_VOICES = {
+    "Rachel": {"id": "21m00Tcm4TlvDq8ikWAM", "gender": "female", "desc": "温柔自然，适合介绍"},
+    "Matilda": {"id": "XrExE9yKIg1WjnnlVkGX", "gender": "female", "desc": "专业沉稳"},
+    "Antoni": {"id": "ErXwobaYiN019PkySvjV", "gender": "male", "desc": "专业有力"},
+    "Adam": {"id": "pNInz6obpgDQGcFmaJgB", "gender": "male", "desc": "深沉磁性"},
+    "Bill": {"id": "pqHfZKP75CvOlQylNhV4", "gender": "male", "desc": "自信权威"},
+    "Sarah": {"id": "EXAVITQu4vr4xnSDxMaL", "gender": "female", "desc": "亲切友好"},
+}
 
-async def generate_tts(text, language, gender):
+
+async def generate_edge_tts(text, language, gender):
+    """Generate audio using Edge TTS (free)."""
     import edge_tts
 
-    voice_info = VOICES.get(language)
+    voice_info = EDGE_VOICES.get(language)
     if not voice_info:
         raise ValueError("不支持的语言")
     voice = voice_info.get(gender, voice_info["female"])
@@ -65,29 +75,77 @@ async def generate_tts(text, language, gender):
             duration_sec = len(para_audio) / 6000
 
         gap = 0.3 if i < len(paragraphs) - 1 else 0
-
         segments.append({
             "start": round(cumulative_time, 1),
             "end": round(cumulative_time + duration_sec, 1),
             "text": para
         })
-
         audio_chunks.append(bytes(para_audio))
         cumulative_time += duration_sec + gap
 
     full_audio = b"".join(audio_chunks)
     total_duration = segments[-1]["end"] if segments else 0
 
-    return {
-        "audio_base64": base64.b64encode(full_audio).decode("ascii"),
-        "segments": segments,
-        "duration": round(total_duration, 1),
-        "duration_fmt": f"{int(total_duration//60)}:{int(total_duration%60):02d}",
-        "segment_count": len(segments),
-        "file_size_mb": round(len(full_audio) / 1024 / 1024, 1),
-        "voice": voice,
-        "language": voice_info["label"],
+    return full_audio, segments, total_duration, voice
+
+
+def generate_elevenlabs(text, voice_id, api_key):
+    """Generate audio using ElevenLabs API (high quality)."""
+    paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
+    if not paragraphs:
+        paragraphs = [text]
+
+    full_text = "\n\n".join(paragraphs)
+
+    url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+    headers = {
+        "xi-api-key": api_key,
+        "Content-Type": "application/json",
+        "Accept": "audio/mpeg",
     }
+    payload = json.dumps({
+        "text": full_text,
+        "model_id": "eleven_multilingual_v2",
+        "voice_settings": {
+            "stability": 0.5,
+            "similarity_boost": 0.75,
+            "style": 0.4,
+            "use_speaker_boost": True
+        }
+    }).encode("utf-8")
+
+    req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
+
+    try:
+        with urllib.request.urlopen(req, timeout=55) as resp:
+            audio_data = resp.read()
+    except urllib.error.HTTPError as e:
+        body = e.read().decode()
+        raise ValueError(f"ElevenLabs API error ({e.code}): {body}")
+
+    # Estimate segment timestamps based on text length ratio
+    total_chars = sum(len(p) for p in paragraphs)
+    # Rough estimate: 15 chars per second for most languages
+    estimated_total = total_chars / 12
+    segments = []
+    cumulative = 0.0
+    for para in paragraphs:
+        ratio = len(para) / total_chars
+        dur = estimated_total * ratio
+        segments.append({
+            "start": round(cumulative, 1),
+            "end": round(cumulative + dur, 1),
+            "text": para
+        })
+        cumulative += dur
+
+    voice_name = voice_id
+    for name, info in ELEVENLABS_VOICES.items():
+        if info["id"] == voice_id:
+            voice_name = name
+            break
+
+    return audio_data, segments, cumulative, voice_name
 
 
 class handler(BaseHTTPRequestHandler):
@@ -98,39 +156,57 @@ class handler(BaseHTTPRequestHandler):
         try:
             data = json.loads(body)
         except Exception:
-            self.send_response(400)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps({"error": "Invalid JSON"}).encode())
+            self._json_response(400, {"error": "Invalid JSON"})
             return
 
         text = data.get("text", "").strip()
-        language = data.get("language", "ms-MY")
-        gender = data.get("gender", "female")
+        engine = data.get("engine", "edge")
 
         if not text:
-            self.send_response(400)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps({"error": "请输入文案内容"}).encode())
+            self._json_response(400, {"error": "请输入文案内容"})
             return
 
         try:
-            result = asyncio.run(generate_tts(text, language, gender))
+            if engine == "elevenlabs":
+                api_key = data.get("api_key", "")
+                voice_id = data.get("voice_id", "21m00Tcm4TlvDq8ikWAM")
+                if not api_key:
+                    self._json_response(400, {"error": "请输入 ElevenLabs API Key"})
+                    return
+                audio, segments, duration, voice_name = generate_elevenlabs(text, voice_id, api_key)
+                engine_label = "ElevenLabs"
+            else:
+                language = data.get("language", "ms-MY")
+                gender = data.get("gender", "female")
+                audio, segments, duration, voice_name = asyncio.run(
+                    generate_edge_tts(text, language, gender)
+                )
+                engine_label = "Edge TTS"
 
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps(result, ensure_ascii=False).encode("utf-8"))
+            result = {
+                "audio_base64": base64.b64encode(audio).decode("ascii"),
+                "segments": segments,
+                "duration": round(duration, 1),
+                "duration_fmt": f"{int(duration//60)}:{int(duration%60):02d}",
+                "segment_count": len(segments),
+                "file_size_mb": round(len(audio) / 1024 / 1024, 1),
+                "voice": voice_name,
+                "engine": engine_label,
+            }
+
+            self._json_response(200, result)
 
         except Exception as e:
-            self.send_response(500)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps({"error": str(e)}).encode())
+            self._json_response(500, {"error": str(e)})
 
     def do_GET(self):
-        self.send_response(200)
+        self._json_response(200, {
+            "edge_voices": EDGE_VOICES,
+            "elevenlabs_voices": ELEVENLABS_VOICES,
+        })
+
+    def _json_response(self, status, data):
+        self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.end_headers()
-        self.wfile.write(json.dumps({"voices": VOICES}).encode())
+        self.wfile.write(json.dumps(data, ensure_ascii=False).encode("utf-8"))
