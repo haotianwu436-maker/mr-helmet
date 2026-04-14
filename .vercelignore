@@ -1,0 +1,7 @@
+app.py
+templates/
+generate_audio.py
+sales_script.txt
+helmet_sales_audio.mp3
+segments.json
+.claude/
