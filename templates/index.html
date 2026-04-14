@@ -29,10 +29,14 @@
       padding: 24px 16px;
     }
     .container { width: 100%; max-width: 640px; }
+
+    /* Header */
     .header { text-align: center; margin-bottom: 24px; }
     .header h1 { font-size: 24px; color: var(--text-active); }
     .header h1 span { color: var(--primary); }
     .header p { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
+
+    /* Card */
     .card {
       background: var(--bg-card);
       border-radius: 16px;
@@ -41,68 +45,190 @@
       margin-bottom: 16px;
     }
     .card-title {
-      font-size: 14px; font-weight: 600; color: var(--text-dim);
-      text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
     }
-    label { display: block; font-size: 13px; color: var(--text-dim); margin-bottom: 6px; font-weight: 500; }
+
+    /* Form */
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
     textarea {
-      width: 100%; min-height: 200px; background: var(--bg); border: 1px solid var(--border);
-      border-radius: 10px; padding: 14px; color: var(--text); font-size: 14px;
-      line-height: 1.6; resize: vertical; font-family: inherit;
+      width: 100%;
+      min-height: 200px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.6;
+      resize: vertical;
+      font-family: inherit;
     }
     textarea:focus { outline: none; border-color: var(--primary); }
     textarea::placeholder { color: #555570; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 16px;
+    }
     select {
-      width: 100%; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border);
-      border-radius: 10px; color: var(--text); font-size: 14px; cursor: pointer; appearance: none;
+      width: 100%;
+      padding: 10px 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 14px;
+      cursor: pointer;
+      appearance: none;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238888aa' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-      background-repeat: no-repeat; background-position: right 12px center;
+      background-repeat: no-repeat;
+      background-position: right 12px center;
     }
     select:focus { outline: none; border-color: var(--primary); }
+
+    /* Generate Button */
     .generate-btn {
-      width: 100%; padding: 14px; background: var(--primary); border: none; border-radius: 12px;
-      color: white; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 20px;
-      transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%;
+      padding: 14px;
+      background: var(--primary);
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
     .generate-btn:hover { background: var(--primary-light); }
     .generate-btn:active { transform: scale(0.98); }
-    .generate-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .generate-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
     .generate-btn .spinner {
-      width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3);
-      border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; display: none;
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: none;
     }
     .generate-btn.loading .spinner { display: block; }
     .generate-btn.loading .btn-text { display: none; }
     .generate-btn.loading .btn-loading { display: inline; }
     .btn-loading { display: none; }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Result */
     .result-card { display: none; }
     .result-card.show { display: block; }
-    .result-info { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
-    .result-stat { text-align: center; padding: 12px; background: var(--bg); border-radius: 10px; }
-    .result-stat .value { font-size: 20px; font-weight: 700; color: var(--primary-light); }
-    .result-stat .label { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
-    .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .result-info {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .result-stat {
+      text-align: center;
+      padding: 12px;
+      background: var(--bg);
+      border-radius: 10px;
+    }
+    .result-stat .value {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--primary-light);
+    }
+    .result-stat .label {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+
+    /* Action Buttons */
+    .action-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
     .action-btn {
-      padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg);
-      color: var(--text); font-size: 14px; font-weight: 500; cursor: pointer; text-align: center;
-      text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
       transition: all 0.15s;
     }
     .action-btn:hover { border-color: var(--primary); color: var(--primary-light); }
-    .action-btn.primary { background: var(--primary); border-color: var(--primary); color: white; }
+    .action-btn.primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
     .action-btn.primary:hover { background: var(--primary-light); }
-    .player-embed { margin-top: 16px; border-radius: 12px; overflow: hidden; background: var(--bg); padding: 16px; }
+
+    /* Player embed */
+    .player-embed {
+      margin-top: 16px;
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--bg);
+      padding: 16px;
+    }
     .player-embed audio { width: 100%; }
+
+    /* Toast */
     .toast {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px);
-      background: var(--success); color: white; padding: 10px 20px; border-radius: 8px;
-      font-size: 14px; transition: transform 0.3s; z-index: 999;
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--success);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: transform 0.3s;
+      z-index: 999;
     }
     .toast.show { transform: translateX(-50%) translateY(0); }
     .toast.error { background: var(--error); }
-    .char-count { text-align: right; font-size: 12px; color: var(--text-dim); margin-top: 6px; }
+
+    /* Char count */
+    .char-count {
+      text-align: right;
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-top: 6px;
+    }
   </style>
 </head>
 <body>
@@ -112,6 +238,7 @@
       <p>输入文案 / 选择语言和音色 / 自动生成语音</p>
     </div>
 
+    <!-- Input Card -->
     <div class="card">
       <div class="card-title">文案内容</div>
       <label for="text">输入销售话术（段落间用空行分隔）</label>
@@ -122,16 +249,9 @@
         <div>
           <label for="language">语言</label>
           <select id="language">
-            <option value="ms-MY" selected>马来语 (Malay)</option>
-            <option value="zh-CN">中文普通话</option>
-            <option value="zh-HK">粤语 (Cantonese)</option>
-            <option value="en-US">英语 (English)</option>
-            <option value="id-ID">印尼语 (Indonesian)</option>
-            <option value="vi-VN">越南语 (Vietnamese)</option>
-            <option value="th-TH">泰语 (Thai)</option>
-            <option value="ja-JP">日语 (Japanese)</option>
-            <option value="ko-KR">韩语 (Korean)</option>
-            <option value="ar-SA">阿拉伯语 (Arabic)</option>
+            {% for code, info in voices.items() %}
+            <option value="{{ code }}" {% if code == 'ms-MY' %}selected{% endif %}>{{ info.label }}</option>
+            {% endfor %}
           </select>
         </div>
         <div>
@@ -150,6 +270,7 @@
       </button>
     </div>
 
+    <!-- Result Card -->
     <div class="card result-card" id="resultCard">
       <div class="card-title">生成结果</div>
       <div class="result-info">
@@ -168,11 +289,11 @@
       </div>
 
       <div class="action-row">
-        <button class="action-btn primary" id="downloadBtn" onclick="downloadAudio()">
+        <a class="action-btn primary" href="/download" download>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           下载 MP3
-        </button>
-        <button class="action-btn" onclick="togglePlayer()">
+        </a>
+        <button class="action-btn" onclick="openPlayer()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
           在线试听
         </button>
@@ -192,8 +313,6 @@
     const generateBtn = document.getElementById('generateBtn');
     const resultCard = document.getElementById('resultCard');
 
-    let audioBlobUrl = null;
-
     textarea.addEventListener('input', () => {
       charCount.textContent = textarea.value.length;
     });
@@ -203,13 +322,6 @@
       t.textContent = msg;
       t.className = 'toast show' + (isError ? ' error' : '');
       setTimeout(() => t.className = 'toast', 3000);
-    }
-
-    function base64ToBlob(b64, mime) {
-      const bin = atob(b64);
-      const arr = new Uint8Array(bin.length);
-      for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-      return new Blob([arr], { type: mime });
     }
 
     async function generate() {
@@ -237,25 +349,18 @@
           return;
         }
 
-        // Create blob URL from base64 audio
-        if (audioBlobUrl) URL.revokeObjectURL(audioBlobUrl);
-        const blob = base64ToBlob(data.audio_base64, 'audio/mpeg');
-        audioBlobUrl = URL.createObjectURL(blob);
-
         // Show result
         document.getElementById('resDuration').textContent = data.duration_fmt;
-        document.getElementById('resSegments').textContent = data.segment_count;
+        document.getElementById('resSegments').textContent = data.segments;
         document.getElementById('resSize').textContent = data.file_size_mb + ' MB';
 
         resultCard.classList.add('show');
         showToast('生成成功! ' + data.language + ' · ' + data.voice, false);
 
-        // Set audio preview
-        document.getElementById('audioPreview').src = audioBlobUrl;
+        // Reset audio preview
+        const audioPreview = document.getElementById('audioPreview');
+        audioPreview.src = '/public/helmet_sales_audio.mp3?t=' + Date.now();
         document.getElementById('playerEmbed').style.display = 'none';
-
-        // Scroll to result
-        resultCard.scrollIntoView({ behavior: 'smooth' });
 
       } catch (e) {
         showToast('网络错误: ' + e.message, true);
@@ -265,16 +370,7 @@
       }
     }
 
-    function downloadAudio() {
-      if (!audioBlobUrl) { showToast('请先生成音频', true); return; }
-      const a = document.createElement('a');
-      a.href = audioBlobUrl;
-      a.download = 'mr_helmet_audio.mp3';
-      a.click();
-    }
-
-    function togglePlayer() {
-      if (!audioBlobUrl) { showToast('请先生成音频', true); return; }
+    function openPlayer() {
       const embed = document.getElementById('playerEmbed');
       if (embed.style.display === 'none') {
         embed.style.display = 'block';
