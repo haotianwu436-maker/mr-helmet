@@ -1,12 +1,14 @@
 """
 Vercel Serverless Function: TTS Audio Generation
 Supports both Edge TTS (free) and ElevenLabs (high quality)
+Also supports translation via Moonshot/Claude/OpenAI APIs
 POST /api/generate
 """
 
 import asyncio
 import base64
 import json
+import os
 import urllib.request
 import urllib.error
 
@@ -35,6 +37,87 @@ ELEVENLABS_VOICES = {
     "Bill": {"id": "pqHfZKP75CvOlQylNhV4", "gender": "male", "desc": "自信权威"},
     "Sarah": {"id": "EXAVITQu4vr4xnSDxMaL", "gender": "female", "desc": "亲切友好"},
 }
+
+
+def translate_with_llm(text, source_lang, target_lang, provider=None):
+    """Translate text using LLM API (Moonshot/Claude/OpenAI)."""
+    provider = provider or os.getenv("LLM_PROVIDER", "moonshot")
+
+    if provider == "moonshot":
+        return _translate_moonshot(text, source_lang, target_lang)
+    elif provider == "claude":
+        return _translate_claude(text, source_lang, target_lang)
+    elif provider == "openai":
+        return _translate_openai(text, source_lang, target_lang)
+    else:
+        raise ValueError(f"Unknown provider: {provider}")
+
+
+def _translate_moonshot(text, source_lang, target_lang):
+    """Translate using Moonshot API."""
+    api_key = os.getenv("MOONSHOT_API_KEY")
+    if not api_key:
+        raise ValueError("MOONSHOT_API_KEY not set")
+
+    url = "https://api.moonshot.cn/v1/chat/completions"
+
+    lang_map = {
+        "auto": "自动检测",
+        "zh-CN": "中文（简体）",
+        "zh-TW": "中文（繁體）",
+        "en": "英文",
+        "ms": "马来文",
+        "th": "泰文",
+        "vi": "越南文",
+        "id": "印尼文",
+        "ja": "日文",
+        "ko": "韩文",
+    }
+
+    source_lang_name = lang_map.get(source_lang, source_lang)
+    target_lang_name = lang_map.get(target_lang, target_lang)
+
+    prompt = f"""请将以下销售文案从{source_lang_name}翻译成{target_lang_name}。
+保持原文的风格、语气和格式完全不变。只返回翻译后的文本，不需要任何说明或额外内容。
+
+原文：
+{text}"""
+
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+
+    payload = json.dumps({
+        "model": "moonshot-v1",
+        "messages": [
+            {"role": "user", "content": prompt}
+        ],
+        "temperature": 0.3,
+        "max_tokens": 4096
+    }).encode("utf-8")
+
+    try:
+        req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            result = json.loads(resp.read().decode())
+            if "choices" in result and result["choices"]:
+                return result["choices"][0]["message"]["content"].strip()
+            else:
+                raise Exception(f"Unexpected API response: {result}")
+    except urllib.error.HTTPError as e:
+        error_body = e.read().decode()
+        raise Exception(f"Moonshot API error ({e.code}): {error_body}")
+
+
+def _translate_claude(text, source_lang, target_lang):
+    """Translate using Claude API."""
+    raise NotImplementedError("Claude translation not supported in Vercel environment. Use Moonshot instead.")
+
+
+def _translate_openai(text, source_lang, target_lang):
+    """Translate using OpenAI API."""
+    raise NotImplementedError("OpenAI translation not supported in Vercel environment. Use Moonshot instead.")
 
 
 async def generate_edge_tts(text, language, gender):
@@ -166,6 +249,32 @@ class handler(BaseHTTPRequestHandler):
             self._json_response(400, {"error": "请输入文案内容"})
             return
 
+        # Handle translation if enabled
+        translated_info = {"translated": False}
+        original_text = text
+        if data.get("translate", False):
+            try:
+                source_lang = data.get("source_lang", "auto")
+                target_lang = data.get("target_lang")
+                llm_provider = data.get("llm_provider") or os.getenv("LLM_PROVIDER", "moonshot")
+
+                if not target_lang:
+                    self._json_response(400, {"error": "翻译模式需要指定 target_lang"})
+                    return
+
+                text = translate_with_llm(text, source_lang, target_lang, llm_provider)
+                translated_info = {
+                    "translated": True,
+                    "original_text": original_text,
+                    "translated_text": text,
+                    "source_lang": source_lang,
+                    "target_lang": target_lang,
+                    "llm_provider": llm_provider
+                }
+            except Exception as e:
+                self._json_response(500, {"error": f"翻译失败: {str(e)}"})
+                return
+
         try:
             if engine == "elevenlabs":
                 api_key = data.get("api_key", "")
@@ -193,6 +302,8 @@ class handler(BaseHTTPRequestHandler):
                 "voice": voice_name,
                 "engine": engine_label,
             }
+            # Merge translation info
+            result.update(translated_info)
 
             self._json_response(200, result)
 

@@ -15,7 +15,15 @@ from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+# Load .env file for local development
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 import edge_tts
+from translate import translate_with_llm
 
 app = FastAPI(title="Mr. Helmet TTS")
 
@@ -59,6 +67,35 @@ async def player():
         return HTMLResponse(f.read())
 
 
+@app.post("/api/translate")
+async def translate_api(request: Request):
+    """翻译 API 端点"""
+    try:
+        data = await request.json()
+        text = data.get("text", "").strip()
+        source_lang = data.get("source_lang", "auto")
+        target_lang = data.get("target_lang")
+        provider = data.get("provider") or os.getenv("LLM_PROVIDER", "moonshot")
+
+        if not text or not target_lang:
+            return JSONResponse({"error": "Missing required fields: text, target_lang"}, status_code=400)
+
+        # 调用翻译函数
+        translated = translate_with_llm(text, source_lang, target_lang, provider)
+
+        return {
+            "translated_text": translated,
+            "provider": provider,
+            "source_lang": source_lang,
+            "target_lang": target_lang,
+            "success": True
+        }
+    except ValueError as e:
+        return JSONResponse({"error": f"Configuration error: {str(e)}"}, status_code=500)
+    except Exception as e:
+        return JSONResponse({"error": f"Translation failed: {str(e)}"}, status_code=500)
+
+
 @app.post("/api/generate")
 async def generate_audio(request: Request):
     data = await request.json()
@@ -67,6 +104,30 @@ async def generate_audio(request: Request):
 
     if not text:
         return JSONResponse({"error": "请输入文案内容"}, status_code=400)
+
+    # 处理翻译（如果启用）
+    translated_info = {"translated": False}
+    original_text = text
+    if data.get("translate", False):
+        try:
+            source_lang = data.get("source_lang", "auto")
+            target_lang = data.get("target_lang")
+            llm_provider = data.get("llm_provider") or os.getenv("LLM_PROVIDER", "moonshot")
+
+            if not target_lang:
+                return JSONResponse({"error": "翻译模式需要指定 target_lang"}, status_code=400)
+
+            text = translate_with_llm(text, source_lang, target_lang, llm_provider)
+            translated_info = {
+                "translated": True,
+                "original_text": original_text,
+                "translated_text": text,
+                "source_lang": source_lang,
+                "target_lang": target_lang,
+                "llm_provider": llm_provider
+            }
+        except Exception as e:
+            return JSONResponse({"error": f"翻译失败: {str(e)}"}, status_code=500)
 
     paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
     if not paragraphs:
@@ -148,7 +209,7 @@ async def generate_audio(request: Request):
         json.dump(segments, f, ensure_ascii=False, indent=2)
 
     duration = segments[-1]["end"] if segments else 0
-    return {
+    response = {
         "audio_base64": base64.b64encode(audio).decode("ascii"),
         "segments": segments,
         "duration": round(duration, 1),
@@ -158,6 +219,9 @@ async def generate_audio(request: Request):
         "voice": voice_name,
         "engine": engine_label,
     }
+    # 合并翻译信息
+    response.update(translated_info)
+    return response
 
 
 @app.get("/download")
