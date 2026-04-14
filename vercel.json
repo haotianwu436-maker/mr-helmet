@@ -1,10 +1,9 @@
 {
+  "buildCommand": "",
+  "outputDirectory": "public",
   "functions": {
-    "api/generate.py": {
-      "maxDuration": 60
+    "api/*.py": {
+      "runtime": "vercel-python@latest"
     }
-  },
-  "rewrites": [
-    { "source": "/api/generate", "destination": "/api/generate" }
-  ]
+  }
 }
