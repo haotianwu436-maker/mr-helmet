@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Mr. Helmet - Persembahan Produk</title>
+  <meta property="og:title" content="Mr. Helmet - Mesin Basuh Helmet Layan Diri">
+  <meta property="og:description" content="Dengar pembentangan pelan perkongsian Mr. Helmet">
+  <meta property="og:type" content="website">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary: #534AB7;
+      --primary-light: #6B62CC;
+      --primary-dark: #3C3489;
+      --bg: #0f0f1a;
+      --bg-card: #1a1a2e;
+      --bg-subtitle: #16162a;
+      --text: #e8e8f0;
+      --text-dim: #8888aa;
+      --text-active: #ffffff;
+      --border: #2a2a40;
+      --progress-track: #2a2a40;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      padding: 0 16px;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      padding: 24px 0 16px;
+    }
+    .header h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-active);
+      letter-spacing: 0.5px;
+    }
+    .header h1 span {
+      color: var(--primary);
+    }
+    .header p {
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+
+    /* Player Card */
+    .player-card {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid var(--border);
+    }
+
+    /* Play Button */
+    .play-btn {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      transition: transform 0.15s, background 0.15s;
+      flex-shrink: 0;
+    }
+    .play-btn:active { transform: scale(0.92); }
+    .play-btn:hover { background: var(--primary-light); }
+    .play-btn svg { fill: white; }
+
+    /* Progress Bar */
+    .progress-wrap {
+      width: 100%;
+      margin-bottom: 8px;
+      cursor: pointer;
+      padding: 6px 0;
+      touch-action: none;
+    }
+    .progress-track {
+      width: 100%;
+      height: 4px;
+      background: var(--progress-track);
+      border-radius: 2px;
+      position: relative;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.1s linear;
+    }
+
+    /* Time + Speed Row */
+    .controls-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+    .time-display {
+      font-size: 12px;
+      color: var(--text-dim);
+      font-variant-numeric: tabular-nums;
+    }
+    .speed-controls {
+      display: flex;
+      gap: 4px;
+    }
+    .speed-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .speed-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+
+    /* Subtitle Panel */
+    .subtitle-panel {
+      margin-top: 16px;
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      max-height: calc(100vh - 280px);
+      padding-bottom: 24px;
+    }
+    .subtitle-item {
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      border-radius: 10px;
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text-dim);
+      background: var(--bg-subtitle);
+      border-left: 3px solid transparent;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    .subtitle-item.active {
+      color: var(--text-active);
+      background: rgba(83, 74, 183, 0.15);
+      border-left-color: var(--primary);
+    }
+    .subtitle-item:hover {
+      background: rgba(83, 74, 183, 0.1);
+    }
+
+    /* Tap to Play Overlay */
+    .tap-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 15, 26, 0.95);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      cursor: pointer;
+    }
+    .tap-overlay.hidden { display: none; }
+    .tap-play-btn {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      animation: pulse 2s infinite;
+    }
+    .tap-play-btn svg { fill: white; width: 36px; height: 36px; }
+    .tap-text {
+      color: var(--text-dim);
+      font-size: 14px;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(83,74,183,0.4); }
+      50% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(83,74,183,0); }
+    }
+
+    /* Loading */
+    .loading { text-align: center; padding: 40px; color: var(--text-dim); font-size: 14px; }
+  </style>
+</head>
+<body>
+
+  <!-- Tap to Play Overlay -->
+  <div class="tap-overlay" id="tapOverlay">
+    <div class="tap-play-btn">
+      <svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg>
+    </div>
+    <p class="tap-text">Ketuk untuk mula dengar</p>
+  </div>
+
+  <div class="container">
+    <div class="header">
+      <h1><span>Mr. Helmet</span></h1>
+      <p>Pembentangan Pelan Perkongsian</p>
+    </div>
+
+    <div class="player-card">
+      <!-- Play/Pause Button -->
+      <button class="play-btn" id="playBtn">
+        <svg width="24" height="24" viewBox="0 0 24 24" id="playIcon">
+          <polygon points="6,3 20,12 6,21"/>
+        </svg>
+      </button>
+
+      <!-- Progress Bar -->
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-track">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </div>
+
+      <!-- Time + Speed -->
+      <div class="controls-row">
+        <span class="time-display" id="timeDisplay">0:00 / 0:00</span>
+        <div class="speed-controls">
+          <button class="speed-btn" data-speed="0.75">0.75x</button>
+          <button class="speed-btn active" data-speed="1">1x</button>
+          <button class="speed-btn" data-speed="1.25">1.25x</button>
+          <button class="speed-btn" data-speed="1.5">1.5x</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subtitles -->
+    <div class="subtitle-panel" id="subtitlePanel">
+      <div class="loading" id="loadingText">Memuatkan...</div>
+    </div>
+  </div>
+
+  <audio id="audio" preload="auto" playsinline>
+    <source src="helmet_sales_audio.mp3" type="audio/mpeg">
+  </audio>
+
+  <script>
+    const audio = document.getElementById('audio');
+    const playBtn = document.getElementById('playBtn');
+    const playIcon = document.getElementById('playIcon');
+    const progressWrap = document.getElementById('progressWrap');
+    const progressFill = document.getElementById('progressFill');
+    const timeDisplay = document.getElementById('timeDisplay');
+    const subtitlePanel = document.getElementById('subtitlePanel');
+    const tapOverlay = document.getElementById('tapOverlay');
+    const loadingText = document.getElementById('loadingText');
+
+    let segments = [];
+    let activeIndex = -1;
+    let isPlaying = false;
+
+    // Format seconds to m:ss
+    function fmt(s) {
+      if (!isFinite(s) || s < 0) s = 0;
+      const m = Math.floor(s / 60);
+      const sec = Math.floor(s % 60);
+      return m + ':' + (sec < 10 ? '0' : '') + sec;
+    }
+
+    // Update play/pause icon
+    function updateIcon() {
+      if (isPlaying) {
+        playIcon.innerHTML = '<rect x="5" y="3" width="4" height="18"/><rect x="15" y="3" width="4" height="18"/>';
+      } else {
+        playIcon.innerHTML = '<polygon points="6,3 20,12 6,21"/>';
+      }
+    }
+
+    // Load segments
+    fetch('segments.json')
+      .then(r => r.json())
+      .then(data => {
+        segments = data;
+        renderSubtitles();
+      })
+      .catch(() => {
+        loadingText.textContent = 'Gagal memuatkan sari kata';
+      });
+
+    function renderSubtitles() {
+      subtitlePanel.innerHTML = '';
+      segments.forEach((seg, i) => {
+        const div = document.createElement('div');
+        div.className = 'subtitle-item';
+        div.textContent = seg.text;
+        div.addEventListener('click', () => {
+          audio.currentTime = seg.start;
+          if (!isPlaying) {
+            audio.play();
+            isPlaying = true;
+            updateIcon();
+            tapOverlay.classList.add('hidden');
+          }
+        });
+        subtitlePanel.appendChild(div);
+      });
+    }
+
+    // Tap overlay
+    tapOverlay.addEventListener('click', () => {
+      audio.play().then(() => {
+        isPlaying = true;
+        updateIcon();
+        tapOverlay.classList.add('hidden');
+      }).catch(() => {});
+    });
+
+    // Try autoplay
+    audio.addEventListener('canplaythrough', function tryAutoplay() {
+      audio.removeEventListener('canplaythrough', tryAutoplay);
+      audio.play().then(() => {
+        isPlaying = true;
+        updateIcon();
+        tapOverlay.classList.add('hidden');
+      }).catch(() => {
+        // Autoplay blocked, show tap overlay
+      });
+    });
+
+    // Play/Pause button
+    playBtn.addEventListener('click', () => {
+      if (isPlaying) {
+        audio.pause();
+      } else {
+        audio.play();
+        tapOverlay.classList.add('hidden');
+      }
+    });
+
+    audio.addEventListener('play', () => { isPlaying = true; updateIcon(); });
+    audio.addEventListener('pause', () => { isPlaying = false; updateIcon(); });
+
+    // Time update
+    audio.addEventListener('timeupdate', () => {
+      const cur = audio.currentTime;
+      const dur = audio.duration || 0;
+
+      // Progress bar
+      if (dur > 0) {
+        progressFill.style.width = (cur / dur * 100) + '%';
+      }
+
+      // Time display
+      timeDisplay.textContent = fmt(cur) + ' / ' + fmt(dur);
+
+      // Subtitle sync
+      let newIndex = -1;
+      for (let i = 0; i < segments.length; i++) {
+        if (cur >= segments[i].start && cur < segments[i].end) {
+          newIndex = i;
+          break;
+        }
+      }
+      // If between segments or past last, check nearest
+      if (newIndex === -1 && segments.length > 0) {
+        if (cur >= segments[segments.length - 1].start) {
+          newIndex = segments.length - 1;
+        }
+      }
+
+      if (newIndex !== activeIndex) {
+        activeIndex = newIndex;
+        const items = subtitlePanel.querySelectorAll('.subtitle-item');
+        items.forEach((item, i) => {
+          item.classList.toggle('active', i === activeIndex);
+        });
+        if (activeIndex >= 0 && items[activeIndex]) {
+          items[activeIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }
+    });
+
+    // Progress bar seek (mouse)
+    function seekFromEvent(e) {
+      const rect = progressWrap.getBoundingClientRect();
+      const x = (e.clientX || e.touches[0].clientX) - rect.left;
+      const pct = Math.max(0, Math.min(1, x / rect.width));
+      if (audio.duration) {
+        audio.currentTime = pct * audio.duration;
+      }
+    }
+
+    let dragging = false;
+    progressWrap.addEventListener('mousedown', (e) => { dragging = true; seekFromEvent(e); });
+    document.addEventListener('mousemove', (e) => { if (dragging) seekFromEvent(e); });
+    document.addEventListener('mouseup', () => { dragging = false; });
+
+    // Touch
+    progressWrap.addEventListener('touchstart', (e) => { dragging = true; seekFromEvent(e); }, { passive: true });
+    progressWrap.addEventListener('touchmove', (e) => { if (dragging) seekFromEvent(e); }, { passive: true });
+    progressWrap.addEventListener('touchend', () => { dragging = false; });
+
+    // Speed controls
+    document.querySelectorAll('.speed-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const speed = parseFloat(btn.dataset.speed);
+        audio.playbackRate = speed;
+        document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+
+    // Audio ended
+    audio.addEventListener('ended', () => {
+      isPlaying = false;
+      updateIcon();
+      progressFill.style.width = '100%';
+    });
+  </script>
+</body>
+</html>
